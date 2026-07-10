@@ -10,9 +10,9 @@ other higher-level concern. Those belong to future modules.
 
 from __future__ import annotations
 
-import logging
 from enum import Enum, auto
 
+from tony.logging_system import get_logger
 from tony.metadata import ApplicationMetadata
 
 
@@ -35,7 +35,7 @@ class TonyApplication:
     def __init__(self, metadata: ApplicationMetadata) -> None:
         self._metadata = metadata
         self._state = ApplicationState.CREATED
-        self._logger = logging.getLogger("tony.application")
+        self._logger = get_logger(__name__)
 
     @property
     def metadata(self) -> ApplicationMetadata:

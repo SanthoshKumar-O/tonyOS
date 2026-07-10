@@ -10,10 +10,10 @@ injection container — it is a thin lifecycle coordinator.
 
 from __future__ import annotations
 
-import logging
 import time
 
 from tony.core.application import TonyApplication
+from tony.logging_system import get_logger
 
 
 class ApplicationBootstrap:
@@ -21,7 +21,7 @@ class ApplicationBootstrap:
 
     def __init__(self, application: TonyApplication) -> None:
         self._application = application
-        self._logger = logging.getLogger("tony.bootstrap")
+        self._logger = get_logger(__name__)
 
     @property
     def application(self) -> TonyApplication:

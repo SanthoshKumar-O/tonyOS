@@ -1,0 +1,6 @@
+[application]
+name = "Tony"
+environment = "development"
+
+[logging]
+level = "INFO"

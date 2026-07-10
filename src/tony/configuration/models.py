@@ -39,3 +39,18 @@ class TonyConfiguration(BaseModel):
 
     application: ApplicationConfig = ApplicationConfig()
     logging: LoggingConfig = LoggingConfig()
+    ollama: OllamaConfig
+
+
+class OllamaConfig(BaseModel):
+    """Configuration for the Ollama provider.
+
+    Attributes:
+        host: Base URL of the Ollama server.
+        model: Name of the model to use for generation.
+        timeout: Request timeout, in seconds.
+    """
+
+    host: str = "http://127.0.0.1:11434"
+    model: str = "qwen3:8b"
+    timeout: int = 120

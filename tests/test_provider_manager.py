@@ -1,7 +1,6 @@
 from tony.providers import Provider, ProviderManager
 
 
-
 class DummyProvider(Provider):
     def __init__(self, name: str) -> None:
         super().__init__(name)

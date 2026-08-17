@@ -1,7 +1,8 @@
 from .manager import ConfigurationManager
-from .models import TonyConfiguration
+from .models import PersistenceConfig, TonyConfiguration
 
 __all__ = [
+    "PersistenceConfig",
     "ConfigurationManager",
     "TonyConfiguration",
 ]

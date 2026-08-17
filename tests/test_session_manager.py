@@ -107,3 +107,56 @@ def test_no_active_session() -> None:
 
     with pytest.raises(SessionNotFoundError):
         manager.active()
+
+
+def test_session_manager_loads_persisted_sessions(tmp_path) -> None:
+    from tony.persistence import (
+        PersistenceConfig,
+        SQLitePersistence,
+        SQLiteSessionRepository,
+    )
+
+    persistence = SQLitePersistence(
+        PersistenceConfig(
+            database_path=tmp_path / "tony.db",
+        ),
+    )
+    persistence.initialize()
+
+    repository = SQLiteSessionRepository(persistence)
+
+    first = SessionManager(repository)
+    created = first.create("Persisted Session")
+
+    second = SessionManager(repository)
+
+    assert second.get(created.id) == created
+    assert second.list() == [created]
+
+    persistence.close()
+
+
+def test_session_manager_restores_active_session(tmp_path) -> None:
+    from tony.persistence import (
+        PersistenceConfig,
+        SQLitePersistence,
+        SQLiteSessionRepository,
+    )
+
+    persistence = SQLitePersistence(
+        PersistenceConfig(
+            database_path=tmp_path / "tony.db",
+        ),
+    )
+    persistence.initialize()
+
+    repository = SQLiteSessionRepository(persistence)
+
+    first = SessionManager(repository)
+    created = first.create("Persisted Session")
+
+    second = SessionManager(repository)
+
+    assert second.active() == created
+
+    persistence.close()

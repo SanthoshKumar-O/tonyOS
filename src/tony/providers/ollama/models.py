@@ -6,13 +6,7 @@ from pydantic import BaseModel
 
 
 class OllamaGenerateRequest(BaseModel):
-    """Request payload for the Ollama ``/api/generate`` endpoint.
-
-    Attributes:
-        model: Name of the model to use for generation.
-        prompt: Prompt text to send to the model.
-        stream: Whether to stream the response. Always False for M1.6.
-    """
+    """Request payload for the Ollama ``/api/generate`` endpoint."""
 
     model: str
     prompt: str
@@ -20,14 +14,22 @@ class OllamaGenerateRequest(BaseModel):
 
 
 class OllamaGenerateResponse(BaseModel):
-    """Response payload from the Ollama ``/api/generate`` endpoint.
-
-    Attributes:
-        model: Name of the model that generated the response.
-        response: Generated text.
-        done: Whether generation has completed.
-    """
+    """Response payload from the Ollama ``/api/generate`` endpoint."""
 
     model: str
     response: str
     done: bool
+
+
+class OllamaEmbedRequest(BaseModel):
+    """Request payload for the Ollama ``/api/embed`` endpoint."""
+
+    model: str
+    input: str
+
+
+class OllamaEmbedResponse(BaseModel):
+    """Response payload from the Ollama ``/api/embed`` endpoint."""
+
+    model: str
+    embeddings: list[list[float]]

@@ -10,7 +10,7 @@ from tony.providers.ollama.exceptions import (
     OllamaRequestError,
     OllamaResponseError,
 )
-from tony.providers.ollama.models import OllamaGenerateRequest, OllamaGenerateResponse
+from tony.providers.ollama.models import (OllamaEmbedRequest, OllamaEmbedResponse, OllamaGenerateRequest, OllamaGenerateResponse,)
 
 
 class OllamaClient:
@@ -66,6 +66,43 @@ class OllamaClient:
         except ValidationError as exc:
             raise OllamaResponseError(
                 f"Ollama returned an unexpected response shape: {exc}"
+            ) from exc
+
+    def embed(self, request: OllamaEmbedRequest) -> OllamaEmbedResponse:
+        """Create an embedding using Ollama."""
+
+        try:
+            response = self._http.post(
+                "/api/embed",
+                json=request.model_dump(),
+            )
+        except httpx.RequestError as exc:
+            raise OllamaConnectionError(
+                f"Could not connect to Ollama server at {self.host}"
+            ) from exc
+
+        if response.status_code == httpx.codes.BAD_REQUEST:
+            raise OllamaRequestError(
+                f"Ollama rejected the embed request: {response.text}"
+            )
+
+        if response.status_code != httpx.codes.OK:
+            raise OllamaResponseError(
+                f"Ollama embed request failed with status {response.status_code}"
+            )
+
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise OllamaResponseError(
+                "Ollama returned a non-JSON response"
+            ) from exc
+
+        try:
+            return OllamaEmbedResponse.model_validate(payload)
+        except ValidationError as exc:
+            raise OllamaResponseError(
+                f"Ollama returned an unexpected embedding response shape: {exc}"
             ) from exc
 
     def close(self) -> None:

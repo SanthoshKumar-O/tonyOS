@@ -8,6 +8,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from tony.conversation import Conversation
+from tony.memory import Memory
 from tony.session import Session
 
 
@@ -69,3 +70,6 @@ class ExecutionContext(BaseModel):
 
     metadata: ExecutionMetadata
     settings: ExecutionSettings
+
+    working_memory: tuple[Memory, ...] = ()
+    retrieved_memories: tuple[Memory, ...] = ()

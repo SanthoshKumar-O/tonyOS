@@ -66,3 +66,50 @@ def test_generate_returns_text() -> None:
         result = provider.generate("Hello")
 
         assert result == "Tony is alive!"
+
+
+def test_embed_requires_initialization() -> None:
+    provider = make_provider()
+
+    with pytest.raises(ProviderInitializationError):
+        provider.embed("Tony is local-first.")
+
+
+def test_embed_returns_vector() -> None:
+    provider = make_provider()
+
+    with patch("tony.providers.ollama.provider.OllamaClient") as mock_client:
+        instance = mock_client.return_value
+
+        instance.health.return_value = True
+        instance.embed.return_value = Mock(
+            embeddings=[[0.1, 0.2, 0.3, 0.4]]
+        )
+
+        provider.initialize()
+
+        result = provider.embed("Tony is local-first.")
+
+        assert result == [0.1, 0.2, 0.3, 0.4]
+
+
+def test_embed_rejects_multiple_embeddings() -> None:
+    provider = make_provider()
+
+    with patch("tony.providers.ollama.provider.OllamaClient") as mock_client:
+        instance = mock_client.return_value
+
+        instance.health.return_value = True
+        instance.embed.return_value = Mock(
+            embeddings=[
+                [0.1, 0.2],
+                [0.3, 0.4],
+            ]
+        )
+
+        provider.initialize()
+
+        from tony.providers.ollama.exceptions import OllamaResponseError
+
+        with pytest.raises(OllamaResponseError):
+            provider.embed("Tony")

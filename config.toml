@@ -9,3 +9,6 @@ level = "INFO"
 host = "http://127.0.0.1:11434"
 model = "qwen3:8b"
 timeout = 120
+
+[persistence]
+database_path = "data/tony.db"

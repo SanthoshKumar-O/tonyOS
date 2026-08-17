@@ -5,8 +5,8 @@ from __future__ import annotations
 from tony.providers.base import Provider
 from tony.providers.exceptions import ProviderInitializationError
 from tony.providers.ollama.client import OllamaClient
-from tony.providers.ollama.exceptions import OllamaError
-from tony.providers.ollama.models import OllamaGenerateRequest
+from tony.providers.ollama.exceptions import OllamaError, OllamaResponseError
+from tony.providers.ollama.models import (OllamaEmbedRequest, OllamaGenerateRequest,)
 
 
 class OllamaProvider(Provider):
@@ -42,6 +42,28 @@ class OllamaProvider(Provider):
 
         self._client = client
         self._mark_initialized()
+
+    def embed(self, text: str) -> list[float]:
+        """Generate an embedding vector for the supplied text."""
+
+        if not self.initialized or self._client is None:
+            raise ProviderInitializationError(
+                "Ollama provider has not been initialized"
+            )
+
+        request = OllamaEmbedRequest(
+            model=self.model,
+            input=text,
+        )
+
+        response = self._client.embed(request)
+
+        if len(response.embeddings) != 1:
+            raise OllamaResponseError(
+                "Ollama returned an unexpected number of embeddings"
+            )
+
+        return response.embeddings[0]
 
     def shutdown(self) -> None:
         """Closes the Ollama client and marks the provider as shut down."""

@@ -53,3 +53,49 @@ def test_build_context() -> None:
     result = builder.build(context)
 
     assert "You are Tony." in result.prompt
+
+
+def test_execution_context_supports_memory_snapshots() -> None:
+    from tony.context import (
+        EnvironmentContext,
+        ExecutionContext,
+        ExecutionMetadata,
+        ExecutionSettings,
+        RequestContext,
+    )
+    from tony.memory import Memory, MemoryScope
+    from tony.session import Session
+
+    session = Session(
+        title="Memory test",
+    )
+
+    memory = Memory(
+        content="Tony is local-first.",
+        scope=MemoryScope.PROJECT,
+    )
+
+    context = ExecutionContext(
+        session=session,
+        conversation=session.conversation,
+        request=RequestContext(
+            user_input="Test memory context.",
+        ),
+        environment=EnvironmentContext(
+            current_working_directory="~/tonyOS",
+            platform="Fedora Linux",
+            hostname="test-host",
+            python_version="3.14",
+        ),
+        metadata=ExecutionMetadata(),
+        settings=ExecutionSettings(
+            provider_name="test",
+            temperature=0.0,
+            streaming=False,
+        ),
+        working_memory=(memory,),
+        retrieved_memories=(memory,),
+    )
+
+    assert context.working_memory == (memory,)
+    assert context.retrieved_memories == (memory,)

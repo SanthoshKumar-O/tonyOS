@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from tony.tools import ToolSelection
+
 from tony.planner import (
     AnswerPlan,
     ClarificationPlan,
@@ -35,13 +37,21 @@ def test_answer_plan() -> None:
 
 
 def test_execute_plan() -> None:
+    selection = ToolSelection(
+        tool_name="pwd",
+        confidence=1.0,
+        reason="Print the current working directory.",
+    )
+
     plan = ExecutePlan(
         reason="Execute a tool.",
         confidence=0.9,
+        selection=selection,
     )
 
     assert plan.plan_type is PlanType.EXECUTE
     assert isinstance(plan, ExecutionPlan)
+    assert plan.selection.tool_name == "pwd"
 
 
 def test_clarification_plan() -> None:

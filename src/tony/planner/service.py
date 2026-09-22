@@ -9,7 +9,7 @@ from tony.planner.protocols import (
     PlanFactoryProtocol,
     PlannerProtocol,
 )
-
+from tony.planner.selector import ToolSelectorProtocol
 
 class PlannerService(PlannerProtocol):
     """Produces execution plans from an execution context."""
@@ -18,9 +18,11 @@ class PlannerService(PlannerProtocol):
         self,
         classifier: IntentClassifierProtocol,
         factory: PlanFactoryProtocol,
+        selector: ToolSelectorProtocol,
     ) -> None:
         self._classifier = classifier
         self._factory = factory
+        self._selector = selector
 
     def plan(
         self,
@@ -38,9 +40,12 @@ class PlannerService(PlannerProtocol):
                 )
 
             case "execute":
+                selection = self._selector.select(context)
+
                 return self._factory.execute(
                     reason="Tool execution required.",
                     confidence=1.0,
+                    selection=selection,
                 )
 
             case "clarify":

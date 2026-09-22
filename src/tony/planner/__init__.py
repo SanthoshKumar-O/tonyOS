@@ -15,7 +15,7 @@ from tony.planner.protocols import (
     PlannerProtocol,
 )
 from tony.planner.service import PlannerService
-
+from tony.planner.selector import ToolSelector
 __all__ = [
     "AnswerPlan",
     "ClarificationPlan",
@@ -28,4 +28,5 @@ __all__ = [
     "PlannerProtocol",
     "PlannerService",
     "PlanType",
+    "ToolSelector",
 ]

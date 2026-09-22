@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from tony.tools.models import ToolArgument, ToolSelection
 
 
 class PlanType(StrEnum):
@@ -24,7 +26,10 @@ class ExecutionPlan(BaseModel):
 
     plan_type: PlanType
     reason: str
-    confidence: float
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
 
 
 class AnswerPlan(ExecutionPlan):
@@ -45,6 +50,9 @@ class ExecutePlan(ExecutionPlan):
     )
 
     plan_type: PlanType = PlanType.EXECUTE
+
+    selection: ToolSelection
+    arguments: tuple[ToolArgument, ...] = ()
 
 
 class ClarificationPlan(ExecutionPlan):

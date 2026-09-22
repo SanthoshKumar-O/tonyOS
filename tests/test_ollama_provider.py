@@ -16,6 +16,7 @@ def make_provider() -> OllamaProvider:
     return OllamaProvider(
         host="http://localhost:11434",
         model="qwen3:8b",
+        embedding_model="nomic-embed-text:latest",
         timeout=120,
     )
 
@@ -73,6 +74,23 @@ def test_embed_requires_initialization() -> None:
 
     with pytest.raises(ProviderInitializationError):
         provider.embed("Tony is local-first.")
+
+
+def test_embed_uses_embedding_model() -> None:
+    provider = make_provider()
+
+    with patch("tony.providers.ollama.provider.OllamaClient") as mock_client:
+        instance = mock_client.return_value
+        instance.health.return_value = True
+        instance.embed.return_value = Mock(
+            embeddings=[[0.1, 0.2, 0.3, 0.4]]
+        )
+
+        provider.initialize()
+        provider.embed("Tony is local-first.")
+
+        request = instance.embed.call_args.args[0]
+        assert request.model == "nomic-embed-text:latest"
 
 
 def test_embed_returns_vector() -> None:

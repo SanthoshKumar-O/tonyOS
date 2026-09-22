@@ -147,3 +147,76 @@ def test_conversation_service_uses_container_llm_service() -> None:
     container = TonyContainer()
 
     assert container.conversation_service._llm_service is container.llm_service
+
+def test_memory_store_is_singleton() -> None:
+    container = TonyContainer()
+
+    assert container.memory_store is container.memory_store
+
+
+def test_memory_manager_is_singleton() -> None:
+    container = TonyContainer()
+
+    assert container.memory_manager is container.memory_manager
+
+
+def test_memory_store_uses_container_persistence() -> None:
+    container = TonyContainer()
+
+    assert container.memory_store._persistence is container.persistence
+
+
+def test_memory_store_uses_ollama_embedding_provider() -> None:
+    container = TonyContainer()
+
+    from tony.memory import OllamaEmbeddingProvider
+
+    assert isinstance(
+        container.memory_store._embedding_provider,
+        OllamaEmbeddingProvider,
+    )
+
+
+def test_memory_manager_uses_container_memory_store() -> None:
+    container = TonyContainer()
+
+    assert container.memory_manager._store is container.memory_store
+
+def test_intelligence_pipeline_is_singleton() -> None:
+    container = TonyContainer()
+
+    assert container.intelligence_pipeline is container.intelligence_pipeline
+
+
+def test_intelligence_pipeline_uses_container_prompt_builder() -> None:
+    container = TonyContainer()
+
+    assert (
+        container.intelligence_pipeline._context_builder._prompt_builder
+        is container.prompt_builder
+    )
+def test_memory_retriever_is_singleton() -> None:
+    container = TonyContainer()
+
+    assert container.memory_retriever is container.memory_retriever
+
+
+def test_memory_retriever_uses_container_memory_store() -> None:
+    container = TonyContainer()
+
+    assert container.memory_retriever._store is container.memory_store
+
+
+def test_context_service_is_singleton() -> None:
+    container = TonyContainer()
+
+    assert container.context_service is container.context_service
+
+
+def test_context_service_uses_container_memory_retriever() -> None:
+    container = TonyContainer()
+
+    assert (
+        container.context_service._memory_retriever
+        is container.memory_retriever
+    )

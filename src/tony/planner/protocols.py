@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Protocol
-
+from tony.tools.models import ToolArgument, ToolSelection
 from tony.context import ExecutionContext
 from tony.planner.models import ExecutionPlan
 
@@ -41,6 +41,8 @@ class PlanFactoryProtocol(Protocol):
         *,
         reason: str,
         confidence: float,
+        selection: ToolSelection,
+        arguments: list[ToolArgument] | None = None,
     ) -> ExecutionPlan: ...
 
     def clarify(

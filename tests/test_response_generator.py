@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-
+from tony.tools import ToolSelection
 from tony.planner import (
     AnswerPlan,
     ClarificationPlan,
@@ -35,9 +35,16 @@ def test_generate_answer_response() -> None:
 def test_generate_execution_response() -> None:
     generator = ResponseGenerator()
 
+    selection = ToolSelection(
+        tool_name="git_status",
+        confidence=0.90,
+        reason="Execute git status.",
+    )
+
     plan = ExecutePlan(
         reason="Execute git status.",
         confidence=0.90,
+        selection=selection,
     )
 
     response = generator.generate(plan)

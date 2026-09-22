@@ -4,19 +4,50 @@ from __future__ import annotations
 
 from logging import Logger
 
+from tony.clarification import ClarificationEngine
 from tony.configuration import ConfigurationManager, TonyConfiguration
+from tony.context_builder import ContextBuilder
 from tony.conversation.service import ConversationService
 from tony.llm.service import LLMService
 from tony.logging_system import get_logger
+from tony.memory import (
+    DefaultMemoryRetriever,
+    MemoryManager,
+    OllamaEmbeddingProvider,
+    SQLiteMemoryStore,
+)
+from tony.context import ExecutionContextService
 from tony.persistence import (
     PersistenceConfig,
     SQLitePersistence,
     SQLiteSessionRepository,
 )
+from tony.pipeline import IntelligencePipeline
+from tony.planner import (
+    IntentClassifier,
+    PlanFactory,
+    PlannerService,
+)
+from tony.planner.selector import ToolSelector
 from tony.prompts import PromptBuilder, PromptManager
 from tony.providers import ProviderManager
 from tony.providers.ollama import OllamaProvider
+from tony.response import ResponseGenerator
 from tony.session import SessionManager
+from tony.streaming import ResponseStreamer
+from tony.tools import ToolRegistry
+from tony.tools.archive import register_archive_tools
+from tony.tools.docker import DockerRegistry
+from tony.tools.filesystem.registry import register_filesystem_tools
+from tony.tools.git import GitRegistry
+from tony.tools.media import register_media_tools
+from tony.tools.package import PackageRegistry
+from tony.tools.process import register_process_tools
+from tony.tools.python import PythonRegistry
+from tony.tools.search import register_search_tools
+from tony.tools.systemctl import SystemctlRegistry
+from tony.tools.terminal import TerminalRegistry
+from tony.tools.workspace import register_workspace_tools
 
 from .registry import ServiceRegistry
 
@@ -87,6 +118,88 @@ class TonyContainer:
         return self._registry.resolve("session_manager")
 
     @property
+    def tool_registry(self) -> ToolRegistry:
+        """Return the singleton tool registry."""
+
+        if not self._registry.has("tool_registry"):
+            registry = ToolRegistry()
+
+            register_filesystem_tools(registry)
+            GitRegistry.register(registry)
+            TerminalRegistry.register(registry)
+            register_process_tools(registry)
+            PackageRegistry.register(registry)
+            PythonRegistry.register(registry)
+            DockerRegistry.register(registry)
+            SystemctlRegistry.register(registry)
+            register_archive_tools(registry)
+            register_media_tools(registry)
+            register_search_tools(registry)
+            register_workspace_tools(registry)
+
+            self._registry.register(
+                "tool_registry",
+                registry,
+            )
+
+        return self._registry.resolve("tool_registry")
+
+    @property
+    def memory_store(self) -> SQLiteMemoryStore:
+        """Return the singleton memory store."""
+
+        if not self._registry.has("memory_store"):
+            self._registry.register(
+                "memory_store",
+                SQLiteMemoryStore(
+                    self.persistence,
+                    embedding_provider=OllamaEmbeddingProvider(
+                        self.providers.get("ollama"),
+                    ),
+                ),
+            )
+
+        return self._registry.resolve("memory_store")
+
+    @property
+    def memory_manager(self) -> MemoryManager:
+        """Return the singleton memory manager."""
+
+        if not self._registry.has("memory_manager"):
+            self._registry.register(
+                "memory_manager",
+                MemoryManager(self.memory_store),
+            )
+
+        return self._registry.resolve("memory_manager")
+    
+    @property
+    def memory_retriever(self) -> DefaultMemoryRetriever:
+        """Return the singleton memory retriever."""
+
+        if not self._registry.has("memory_retriever"):
+            self._registry.register(
+                "memory_retriever",
+                DefaultMemoryRetriever(self.memory_store),
+            )
+
+        return self._registry.resolve("memory_retriever")
+
+    @property
+    def context_service(self) -> ExecutionContextService:
+        """Return the singleton execution context service."""
+
+        if not self._registry.has("context_service"):
+            self._registry.register(
+                "context_service",
+                ExecutionContextService(
+                    memory_retriever=self.memory_retriever,
+                ),
+            )
+
+        return self._registry.resolve("context_service")
+
+    @property
     def providers(self) -> ProviderManager:
         """Return the singleton provider manager."""
 
@@ -96,6 +209,7 @@ class TonyContainer:
             ollama = OllamaProvider(
                 host=self.configuration.ollama.host,
                 model=self.configuration.ollama.model,
+                embedding_model=self.configuration.ollama.embedding_model,
                 timeout=self.configuration.ollama.timeout,
             )
 
@@ -159,3 +273,28 @@ class TonyContainer:
             )
 
         return self._registry.resolve("conversation_service")
+
+    @property
+    def intelligence_pipeline(self) -> IntelligencePipeline:
+        """Return the singleton intelligence pipeline."""
+
+        if not self._registry.has("intelligence_pipeline"):
+            self._registry.register(
+                "intelligence_pipeline",
+                IntelligencePipeline(
+                    context_builder=ContextBuilder(
+                        prompt_manager=self.prompt_manager,
+                        prompt_builder=self.prompt_builder,
+                    ),
+                    planner=PlannerService(
+    classifier=IntentClassifier(),
+    factory=PlanFactory(),
+    selector=ToolSelector(self.tool_registry),
+),
+                    clarification_engine=ClarificationEngine(),
+                    response_generator=ResponseGenerator(),
+                    response_streamer=ResponseStreamer(),
+                ),
+            )
+
+        return self._registry.resolve("intelligence_pipeline")

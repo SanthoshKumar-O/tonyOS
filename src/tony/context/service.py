@@ -10,11 +10,19 @@ from tony.context.models import (
     RequestContext,
 )
 from tony.conversation import Conversation
+from tony.memory import MemoryRetriever
 from tony.session import Session
 
 
 class ExecutionContextService:
     """Creates immutable execution contexts."""
+
+    def __init__(
+        self,
+        memory_retriever: MemoryRetriever | None = None,
+    ) -> None:
+        """Create the execution context service."""
+        self._memory_retriever = memory_retriever
 
     def create(
         self,
@@ -27,6 +35,13 @@ class ExecutionContextService:
     ) -> ExecutionContext:
         """Create a new execution context."""
 
+        retrieved_memories = ()
+
+        if self._memory_retriever is not None:
+            retrieved_memories = tuple(
+                self._memory_retriever.retrieve(user_input)
+            )
+
         return ExecutionContext(
             session=session,
             conversation=conversation,
@@ -36,4 +51,5 @@ class ExecutionContextService:
             environment=environment,
             metadata=ExecutionMetadata(),
             settings=settings,
+            retrieved_memories=retrieved_memories,
         )

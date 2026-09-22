@@ -10,11 +10,18 @@ from tony.providers.ollama.models import (OllamaEmbedRequest, OllamaGenerateRequ
 
 
 class OllamaProvider(Provider):
-    def __init__(self, host: str, model: str, timeout: int) -> None:
+    def __init__(
+        self,
+        host: str,
+        model: str,
+        embedding_model: str,
+        timeout: int,
+    ) -> None:
         super().__init__("ollama")
 
         self.host = host
         self.model = model
+        self.embedding_model = embedding_model
         self.timeout = timeout
 
         self._client = None
@@ -52,7 +59,7 @@ class OllamaProvider(Provider):
             )
 
         request = OllamaEmbedRequest(
-            model=self.model,
+            model=self.embedding_model,
             input=text,
         )
 

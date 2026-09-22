@@ -58,3 +58,44 @@ def test_cli_sends_user_message_to_conversation_service() -> None:
     args = conversation_service.reply.call_args.args
 
     assert args[1] == "hello"
+
+
+def test_cli_ask_uses_intelligence_pipeline() -> None:
+    provider = MagicMock()
+    pipeline = MagicMock()
+
+    chunk = MagicMock()
+    chunk.content = "Pipeline response."
+    pipeline.execute.return_value = iter([chunk])
+
+    with (
+        patch("tony.cli.app.TonyContainer") as container_class,
+        patch("tony.cli.app.TonyApplication"),
+        patch("tony.cli.app.ApplicationBootstrap") as bootstrap_class,
+    ):
+        container = container_class.return_value
+        container.providers.get.return_value = provider
+        container.intelligence_pipeline = pipeline
+
+        session = MagicMock()
+        session.conversation = MagicMock()
+
+        container.session_manager.create.return_value = session
+
+        container.context_service.create.return_value = MagicMock()
+
+        from tony.cli.app import run
+
+        run(["ask", "Hello Tony"])
+
+    container.context_service.create.assert_called_once()
+    pipeline.execute.assert_called_once()
+
+    context = pipeline.execute.call_args.args[0]
+
+    assert context is container.context_service.create.return_value
+
+    provider.initialize.assert_called_once()
+    provider.shutdown.assert_called_once()
+    bootstrap_class.return_value.startup.assert_called_once()
+    bootstrap_class.return_value.shutdown.assert_called_once()

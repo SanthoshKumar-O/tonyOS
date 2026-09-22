@@ -7,6 +7,7 @@ from tony.planner.models import (
     ClarificationPlan,
     ExecutePlan,
 )
+from tony.tools.models import ToolArgument, ToolSelection
 
 
 class PlanFactory:
@@ -30,12 +31,16 @@ class PlanFactory:
         *,
         reason: str,
         confidence: float,
+        selection: ToolSelection,
+        arguments: list[ToolArgument] | None = None,
     ) -> ExecutePlan:
-        """Create an execution plan."""
+        """Create a tool execution plan."""
 
         return ExecutePlan(
             reason=reason,
             confidence=confidence,
+            selection=selection,
+            arguments=tuple(arguments or []),
         )
 
     def clarify(
